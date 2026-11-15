@@ -1,5 +1,6 @@
 package com.partner.assistant.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,7 +33,10 @@ data class ToolItem(
 @Composable
 fun ToolsScreen() {
     val context = LocalContext.current
-    val actionHandler = ActionHandler(context)
+    val actionHandler = remember { ActionHandler(context) }
+
+    // State for the Device Info dialog
+    var showDeviceInfo by remember { mutableStateOf(false) }
 
     val tools = listOf(
         ToolItem("Alarm & Timer", Icons.Filled.Alarm, NeonPurple),
@@ -44,6 +48,23 @@ fun ToolsScreen() {
         ToolItem("Open App", Icons.Filled.Apps, Color(0xFF9C27B0)),
         ToolItem("Device Info", Icons.Filled.BatteryFull, Color(0xFF00BCD4))
     )
+
+    // Device Info Dialog
+    if (showDeviceInfo) {
+        AlertDialog(
+            onDismissRequest = { showDeviceInfo = false },
+            title = { Text("Device Info", color = TextPrimary) },
+            text = {
+                Text("Battery Level: ${actionHandler.getBatteryLevel()}%", color = TextSecondary)
+            },
+            confirmButton = {
+                TextButton(onClick = { showDeviceInfo = false }) {
+                    Text("Close", color = NeonPurple)
+                }
+            },
+            containerColor = SurfaceDark
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -70,8 +91,31 @@ fun ToolsScreen() {
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clickable {
-                            if (tool.title == "Flashlight") {
-                                actionHandler.toggleFlashlight()
+                            // Wire up the actions here!
+                            when (tool.title) {
+                                "Flashlight" -> actionHandler.toggleFlashlight()
+                                "Alarm & Timer" -> {
+                                    val msg = actionHandler.openAlarmApp()
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                                "Bluetooth" -> {
+                                    val msg = actionHandler.openBluetoothSettings()
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                                "Sound Mode" -> {
+                                    val msg = actionHandler.toggleSoundMode()
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                                "Open App" -> {
+                                    val msg = actionHandler.openApp("com.google.android.youtube")
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                                "Device Info" -> {
+                                    showDeviceInfo = true
+                                }
+                                else -> {
+                                    Toast.makeText(context, "${tool.title} coming soon!", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         },
                     shape = RoundedCornerShape(24.dp),

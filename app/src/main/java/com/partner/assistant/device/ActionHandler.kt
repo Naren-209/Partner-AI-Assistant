@@ -83,4 +83,65 @@ class ActionHandler(private val context: Context) {
             return "Could not set the alarm."
         }
     }
+    // Opens Bluetooth settings
+    fun openBluetoothSettings(): String {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            return "Opening Bluetooth settings."
+        } catch (e: Exception) {
+            return "Could not open Bluetooth settings."
+        }
+    }
+
+    // Opens the Alarm screen
+    fun openAlarmApp(): String {
+        try {
+            val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
+                putExtra(AlarmClock.EXTRA_HOUR, 7) // Default to 7 AM
+                putExtra(AlarmClock.EXTRA_MINUTES, 0)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            return "Opening Alarm."
+        } catch (e: Exception) {
+            return "No clock app found."
+        }
+    }
+
+    // Toggles between Normal and Vibrate
+    fun toggleSoundMode(): String {
+        return try {
+            val currentMode = audioManager.ringerMode
+            if (currentMode == AudioManager.RINGER_MODE_NORMAL) {
+                audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                "Mode: Vibrate"
+            } else {
+                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+                "Mode: Normal"
+            }
+        } catch (e: Exception) {
+            "Cannot change sound mode (Permission needed)"
+        }
+    }
+
+    // Opens YouTube or another app
+    fun openApp(packageName: String): String {
+        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+        return if (intent != null) {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            "Opening app."
+        } else {
+            "App not installed."
+        }
+    }
+
+    // Get Battery Level
+    fun getBatteryLevel(): Int {
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as android.os.BatteryManager
+        return batteryManager.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    }
 }
